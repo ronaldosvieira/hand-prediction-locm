@@ -716,7 +716,13 @@ struct Agent {
     int greenCardsCount = 0;
     int redCardsCount = 0;
     int blueCardsCount = 0;
-
+    int draftCards[30][3] = {
+        {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, 
+        {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, 
+        {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, 
+        {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, 
+        {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}
+    };
 
     void read();
 
@@ -1027,6 +1033,13 @@ void Agent::draft() {
     cerr << "---- DRAFT PHASE ----" << endl;
 
     int bestIndex = hardcodedDraft();
+
+    for (int i = 0; i < 3; i++)
+        draftCards[state.player.cardsRemaining][i] = state.cards[i].id;
+
+    int j = state.player.cardsRemaining;
+    cerr << "turn " << j << ": " << draftCards[j][0] << " " 
+         << draftCards[j][1] << " " << draftCards[j][2] << endl;
 
     const Card &card = state.cards[bestIndex];
     ++manaCurve[card.cost];
