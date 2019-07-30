@@ -701,6 +701,14 @@ void State::swapPlayers() {
 // ######### AGENT #####################################################################################################
 // #####################################################################################################################
 
+struct CardOcurrence {
+    int id;
+    int amount;
+
+    bool operator< (const CardOcurrence &other) const {
+        return amount < other.amount;
+    }
+};
 
 struct Agent {
     State state;
@@ -711,7 +719,13 @@ struct Agent {
     int greenCardsCount = 0;
     int redCardsCount = 0;
     int blueCardsCount = 0;
+
+    // hand prediction
     int draftCards[30][3] = {};
+    vector<CardOcurrence> cardOcurrences;
+    int cardPossibilities = 90;
+
+    Agent();
 
     void read();
 
@@ -750,6 +764,10 @@ struct Agent {
     void print();
 };
 
+Agent::Agent() {
+    for (int i = 0; i < 160; ++i)
+        cardOcurrences.push_back((CardOcurrence) {i + 1, 0});
+}
 
 void Agent::read() {
     if (!state.isDraft)
@@ -1023,12 +1041,18 @@ void Agent::draft() {
 
     int bestIndex = hardcodedDraft();
 
-    for (int i = 0; i < 3; i++)
-        draftCards[state.player.cardsRemaining][i] = state.cards[i].id;
+    int turn = state.player.cardsRemaining;
 
-    int j = state.player.cardsRemaining;
-    cerr << "turn " << j << ": " << draftCards[j][0] << " " 
-         << draftCards[j][1] << " " << draftCards[j][2] << endl;
+    for (int i = 0; i < 3; i++) {
+        draftCards[turn][i] = state.cards[i].id;
+        cardOcurrences[state.cards[i].id - 1].amount += 1;
+    }
+
+    cerr << "turn " << turn << ": " << draftCards[turn][0] << " "
+         << draftCards[turn][1] << " " << draftCards[turn][2] << endl;
+    cerr << "turn " << turn << ": " << cardOcurrences[state.cards[0].id - 1].amount << " "
+         << cardOcurrences[state.cards[1].id - 1].amount << " "
+         << cardOcurrences[state.cards[2].id - 1].amount << endl;
 
     const Card &card = state.cards[bestIndex];
     ++manaCurve[card.cost];
@@ -1282,6 +1306,11 @@ void Agent::play() {
         allAttackEnemyPlayer(actions);
         return;
     }
+
+    if (state.turn == 1)
+        sort(cardOcurrences.rbegin(), cardOcurrences.rend());
+
+    cerr << "max_co: " << cardOcurrences[0].id << endl;
 
     leaf = 0;
     int depth = 3;
