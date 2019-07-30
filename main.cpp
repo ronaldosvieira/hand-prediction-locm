@@ -841,7 +841,6 @@ void Agent::readCards() {
     state.enemy.guardsCount = 0;
     state.enemy.guardsLaneCount[0] = 0;
     state.enemy.guardsLaneCount[1] = 0;
-    state.enemy.handCount = 0;
 
     state.player.boardCount = 0;
     state.player.boardLaneCount[0] = 0;
