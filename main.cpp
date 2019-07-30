@@ -722,7 +722,7 @@ struct Agent {
 
     // hand prediction
     int draftCards[30][3] = {};
-    vector<CardOcurrence> cardOcurrences;
+    vector<CardOcurrence> cardOccurrences;
     int cardPossibilities = 90;
 
     Agent();
@@ -759,6 +759,8 @@ struct Agent {
 
     int enemyRandomSearch(const State &root);
 
+    void discoverCard(int discoveredCard);
+
     void benchmark();
 
     void print();
@@ -766,7 +768,7 @@ struct Agent {
 
 Agent::Agent() {
     for (int i = 0; i < 160; ++i)
-        cardOcurrences.push_back((CardOcurrence) {i + 1, 0});
+        cardOccurrences.push_back((CardOcurrence) {i + 1, 0});
 }
 
 void Agent::read() {
@@ -812,8 +814,17 @@ void Agent::readPlayersInfo() {
     cin.ignore();
 
     for (int i = 0; i < opponentActions; i++) {
-        string cardNumberAndAction;
-        getline(cin, cardNumberAndAction);
+        int discoveredCard;
+        string action;
+        int origin, target;
+
+        cin >> discoveredCard >> action >> origin >> target;
+        cin.ignore();
+
+        if (action == "ATTACK")
+            continue;
+
+        discoverCard(discoveredCard);
     }
 
     state.enemy.handCount = opponentHand;
@@ -1045,14 +1056,14 @@ void Agent::draft() {
 
     for (int i = 0; i < 3; i++) {
         draftCards[turn][i] = state.cards[i].id;
-        cardOcurrences[state.cards[i].id - 1].amount += 1;
+        cardOccurrences[state.cards[i].id - 1].amount += 1;
     }
 
     cerr << "turn " << turn << ": " << draftCards[turn][0] << " "
          << draftCards[turn][1] << " " << draftCards[turn][2] << endl;
-    cerr << "turn " << turn << ": " << cardOcurrences[state.cards[0].id - 1].amount << " "
-         << cardOcurrences[state.cards[1].id - 1].amount << " "
-         << cardOcurrences[state.cards[2].id - 1].amount << endl;
+    cerr << "turn " << turn << ": " << cardOccurrences[state.cards[0].id - 1].amount << " "
+         << cardOccurrences[state.cards[1].id - 1].amount << " "
+         << cardOccurrences[state.cards[2].id - 1].amount << endl;
 
     const Card &card = state.cards[bestIndex];
     ++manaCurve[card.cost];
@@ -1173,7 +1184,6 @@ int Agent::runBruteForce(State root, int depth, vector<Action> &bestActions, int
 
     return root.evaluate();
 }
-
 
 int Agent::randomSearch(const State &root, vector<Action> &bestActions) {
     int bestScore = INT_MIN;
@@ -1308,9 +1318,21 @@ void Agent::play() {
     }
 
     if (state.turn == 1)
-        sort(cardOcurrences.rbegin(), cardOcurrences.rend());
+        sort(cardOccurrences.rbegin(), cardOccurrences.rend());
 
-    cerr << "max_co: " << cardOcurrences[0].id << endl;
+    int possib = 0;
+
+    for (int i = 0; i < 160; ++i) {
+        if (cardOccurrences[i].amount == 0)
+            break;
+
+        possib++;
+
+        // cerr << "{" << cardOccurrences[i].id << "," << cardOccurrences[i].amount << "} ";
+    }
+
+    // cerr << endl;
+    // cerr << possib << endl;
 
     leaf = 0;
     int depth = 3;
@@ -1372,6 +1394,72 @@ int Agent::evalCardDraft(const Card &card) {
     score += card.cardDraw;
 
     return score;
+}
+
+void Agent::discoverCard(int discoveredCard) {
+    int pos = 0;
+
+    while (cardOccurrences[pos].id != discoveredCard) ++pos;
+
+    cardOccurrences[pos].amount--;
+    cardPossibilities--;
+
+    // resort discovered card
+    for (int k = pos + 1; cardOccurrences[k].amount > cardOccurrences[pos].amount; ++k) {
+        CardOcurrence aux = cardOccurrences[k];
+        cardOccurrences[k] = cardOccurrences[pos];
+        cardOccurrences[pos] = aux;
+
+        pos = k;
+    }
+
+    cerr << "discovered card: " << cardOccurrences[pos].id
+         << "; new amount: " << cardOccurrences[pos].amount << endl;
+
+    if (cardOccurrences[pos].amount == 0) {
+        // find all other draft choices
+        int otherCards[2] = {0, 0};
+
+        for (auto & choices : draftCards) {
+            if (choices[0] == discoveredCard) {
+                otherCards[0] = choices[1];
+                otherCards[1] = choices[2];
+            } else if (choices[1] == discoveredCard) {
+                otherCards[0] = choices[0];
+                otherCards[1] = choices[2];
+            } else if (choices[2] == discoveredCard) {
+                otherCards[0] = choices[0];
+                otherCards[1] = choices[1];
+            } else continue;
+
+            choices[0] = 0;
+            choices[1] = 0;
+            choices[2] = 0;
+
+            // decrement and resort other draft choices
+            for (int otherCard : otherCards) {
+                int otherPos = 0;
+
+                while (cardOccurrences[otherPos].id != otherCard) ++otherPos;
+
+                cardOccurrences[otherPos].amount--;
+                cardPossibilities--;
+
+                for (int k = otherPos + 1; cardOccurrences[k].amount > cardOccurrences[otherPos].amount; ++k) {
+                    CardOcurrence aux = cardOccurrences[k];
+                    cardOccurrences[k] = cardOccurrences[otherPos];
+                    cardOccurrences[otherPos] = aux;
+
+                    otherPos = k;
+                }
+
+                cerr << "discarded: " << cardOccurrences[otherPos].id
+                     << "; new amount: " << cardOccurrences[otherPos].amount << endl;
+            }
+        }
+    }
+
+    cerr << "card possiblts: " << cardPossibilities << endl;
 }
 
 void Agent::benchmark() {
