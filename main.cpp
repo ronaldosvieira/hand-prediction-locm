@@ -493,17 +493,18 @@ int State::evaluate() {
 vector<Action> State::legalMoves() {
     // Remove actions to avoid regenerating each time
     // TODO Fix the remove actions
-//    draftChoicesSeed=-876250167555862261
-//    shufflePlayer0Seed=-4422762594392573393
-//    seed=4882437402899864600
-//    shufflePlayer1Seed=2206163186945330453
+    //    draftChoicesSeed=-876250167555862261
+    //    shufflePlayer0Seed=-4422762594392573393
+    //    seed=4882437402899864600
+    //    shufflePlayer1Seed=2206163186945330453
 
     if (false && !legalActions.empty() && !isEnemyTurn) {
         if (lastAction.type == ActionType::Use) {
             bool defenderDead =
                     lastAction.targetIndex != -1 && cards[lastAction.targetIndex].location == CardLocation::Graveyard;
             bool defenderGuard = lastAction.targetIndex != -1 && cards[lastAction.targetIndex].guard;
-//            bool guardRemoved = lastAction.targetIndex != -1 && !cards[lastAction.targetIndex].guard && cards[lastAction.index].guard; // TODO
+    //      bool guardRemoved = lastAction.targetIndex != -1 && !cards[lastAction.targetIndex].guard &&
+    //      cards[lastAction.index].guard; // TODO
 
             if (!(defenderGuard && defenderDead)) {
                 if (defenderDead) {
@@ -568,12 +569,6 @@ vector<Action> State::legalMoves() {
                                                      return (action.index == lastAction.index);
                                                  }), legalActions.end());
                 }
-
-
-//                    cerr << "---------" << endl;
-//                    cerr << lastAction << endl;
-//                    cerr << "defenderDead: " << defenderDead << " attackerDead: " << attackerDead << " defenderGuard: "
-//                         << defenderGuard << " " << endl;
 
                 return legalActions;
             } else if (lastAction.type == ActionType::Summon && !cards[lastAction.index].charge) { // TODO item
@@ -1141,14 +1136,7 @@ int Agent::runBruteForce(State root, int depth, vector<Action> &bestActions, int
         root.executeAction(bestAction);
 
         // DEBUG
-//        if (!root.isEnemyTurn && bestAction.type != ActionType::PassCard) {
-//            auto legalActions = root.legalMoves();
-//            for (auto action : legalActions) {
-//                action.printErr(state.cards);
-//                cerr << endl;
-//            }
-//            cerr <<"-------" << endl;
-//        }
+
 
         if (!root.isEnemyTurn && checkLethal(root)) {
             cerr << "runBruteForce checkLethal" << endl;
@@ -1284,55 +1272,14 @@ bool Agent::checkLethal(State &state) {
     }
 
     int overdraw = cardToDraw - state.enemy.cardsRemaining;
-    // cerr << "overdraw: " << overdraw << " nextNumberRune: " << nextNumberRune << " cardToDraw: " << cardToDraw << " state.enemy.rune: " << state.enemy.rune << endl;
+    // cerr << "overdraw: " << overdraw << " nextNumberRune: " << nextNumberRune << " cardToDraw: " << cardToDraw
+    // << " state.enemy.rune: " << state.enemy.rune << endl;
     return overdraw > 0 && overdraw >= nextNumberRune;
 }
 
 void Agent::play() {
-
-    // Debug
-//    cerr << "state.enemy.guardsLaneCount[0]: " << state.enemy.guardsLaneCount[0] << endl;
-//    cerr << "state.enemy.guardsLaneCount[1]: " << state.enemy.guardsLaneCount[1] << endl;
-//    cerr << "state.enemy.boardLaneCount[0]: " << state.enemy.boardLaneCount[0] << endl;
-//    cerr << "state.enemy.boardLaneCount[1]: " << state.enemy.boardLaneCount[1] << endl;
-//    cerr << "state.enemy.guardsCount: " << state.enemy.guardsCount << endl;
-//    cerr << "state.enemy.boardCount: " << state.enemy.boardCount << endl << endl;
-//
-//    cerr << "state.player.guardsLaneCount[0]: " << state.player.guardsLaneCount[0] << endl;
-//    cerr << "state.player.guardsLaneCount[1]: " << state.player.guardsLaneCount[1] << endl;
-//    cerr << "state.player.boardLaneCount[0]: " << state.player.boardLaneCount[0] << endl;
-//    cerr << "state.player.boardLaneCount[1]: " << state.player.boardLaneCount[1] << endl;
-//    cerr << "state.player.guardsCount: " << state.player.guardsCount << endl;
-//    cerr << "state.player.boardCount: " << state.player.boardCount << endl;
-//
-//    cerr << "---- ENEMY MONSTYER " << state.turn << "----" << endl;
-//    for (auto &enemyMonster : state.cards) {
-//        if (enemyMonster.location != CardLocation::EnemyBoard) {
-//            continue;
-//        }
-//
-//        cerr << enemyMonster << endl;
-//    }
-//
-//    cerr << "---- PLAYERR MONSTYER " << state.turn << "----" << endl;
-//
-//    for (auto &enemyMonster : state.cards) {
-//        if (enemyMonster.location != CardLocation::PlayerBoard) {
-//            continue;
-//        }
-//
-//        cerr << enemyMonster << endl;
-//    }
-//
-//    cerr << "---- LEGAL ACTIONS " << state.turn << "----" << endl;
-
     vector<Action> legalActions = state.legalMoves();
     cerr << "legalActions: " << legalActions.size() << endl;
-//    for (auto action : legalActions) {
-//        action.printErr(state.cards);
-//        cerr << endl;
-//    }
-
 
     cerr << "---- PLAY PHASE TURN " << state.turn << "----" << endl;
 
@@ -1345,34 +1292,15 @@ void Agent::play() {
     leaf = 0;
     int depth = 3;
     auto score = runBruteForce(state, depth, actions, INT_MIN);
-//    auto score = randomSearch(state, actions);
     cerr << "score: " << score << endl;
     cerr << "leaf: " << leaf << endl;
     cerr << "actions: " << actions.size() << endl;
     state.executeActions(actions);
 
-//    if(state.player.firstPlayer) {
-//        allAttackEnemyPlayer(actions);
-//        return;
-//    }
-
     if (!no_attack) {
         allAttackEnemyPlayer(actions);
         return;
     }
-
-//    if (state.enemy.cardsRemaining < 3 || state.enemy.handCount >= MAX_HAND - 1 ||
-//        (state.player.boardCount > state.enemy.boardCount + 3 &&
-//         state.player.boardCount + state.player.handCount > state.enemy.boardCount + state.enemy.handCount + 2)) {
-//        allAttackEnemyPlayer(actions);
-//        no_attack = false;
-//        return;
-//    }
-//
-//    if ((state.enemy.handCount > 1 &&
-//         (state.player.handCount < state.enemy.handCount || state.player.boardCount < MAX_MONSTERS_BOARD - 1))) {
-//        return;
-//    }
 
     allAttackEnemyPlayer(actions);
     no_attack = false;
