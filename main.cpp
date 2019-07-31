@@ -704,6 +704,7 @@ void State::swapPlayers() {
 struct CardOcurrence {
     int id;
     int amount;
+    Card card;
 
     bool operator< (const CardOcurrence &other) const {
         return amount < other.amount;
@@ -1055,6 +1056,8 @@ void Agent::draft() {
 
     for (int i = 0; i < 3; i++) {
         draftCards[turn][i] = state.cards[i].id;
+
+        cardOccurrences[state.cards[i].id - 1].card = state.cards[i];
         cardOccurrences[state.cards[i].id - 1].amount += 1;
     }
 
@@ -1310,28 +1313,33 @@ void Agent::play() {
 
     cerr << "---- PLAY PHASE TURN " << state.turn << "----" << endl;
 
+    if (state.turn == 1)
+        sort(cardOccurrences.rbegin(), cardOccurrences.rend());
+
+    // inject predictions into enemy hand
+    cerr << "opp hand pred: ";
+
+    int i = 0;
+    int index = state.cards.back().index;
+    for (auto &prediction : cardOccurrences) {
+        if (prediction.card.cost < state.enemy.mana + 1) {
+            prediction.card.location = state.player.handLocation;
+            prediction.card.index = ++index;
+            cerr << prediction.card.id << " ";
+            state.cards.push_back(prediction.card);
+
+            if (++i >= state.enemy.handCount)
+                break;
+        }
+    }
+
+    cerr << endl;
+
     if (checkLethal(state)) {
         cerr << "CHECK LETHAL" << endl;
         allAttackEnemyPlayer(actions);
         return;
     }
-
-    if (state.turn == 1)
-        sort(cardOccurrences.rbegin(), cardOccurrences.rend());
-
-    int possib = 0;
-
-    for (int i = 0; i < 160; ++i) {
-        if (cardOccurrences[i].amount == 0)
-            break;
-
-        possib++;
-
-        // cerr << "{" << cardOccurrences[i].id << "," << cardOccurrences[i].amount << "} ";
-    }
-
-    // cerr << endl;
-    // cerr << possib << endl;
 
     leaf = 0;
     int depth = 3;
