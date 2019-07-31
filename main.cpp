@@ -1320,11 +1320,10 @@ void Agent::play() {
     cerr << "opp hand pred: ";
 
     int i = 0;
-    int index = state.cards.back().index;
     for (auto &prediction : cardOccurrences) {
         if (prediction.card.cost < state.enemy.mana + 1) {
-            prediction.card.location = state.player.handLocation;
-            prediction.card.index = ++index;
+            prediction.card.location = state.enemy.handLocation;
+            prediction.card.index = i;
             cerr << prediction.card.id << " ";
             state.cards.push_back(prediction.card);
 
