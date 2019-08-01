@@ -49,7 +49,7 @@ double elapsed_time() {
 constexpr int MAX_MONSTERS_BOARD = 6;
 constexpr int MAX_MONSTERS_PER_LANE = 3;
 constexpr int MAX_HAND = 8;
-constexpr int TIME_LIMIT = 190;
+constexpr int TIME_LIMIT = 170;
 constexpr int NUMBER_OF_CARDS = 160;
 
 
@@ -1039,7 +1039,7 @@ int Agent::bruteForce(State root, int depth, Action &bestAction, int alpha) {
     }
 
     if (elapsed_time() >= TIME_LIMIT) {
-        return INT_MIN;
+        depth = 1;
     }
 
     int bestScore = INT_MIN;
