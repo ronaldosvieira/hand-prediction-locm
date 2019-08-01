@@ -464,7 +464,7 @@ int State::evaluate() {
 
         if (card.location == player.boardLocation) {
 //            score += card.passed * 3;
-        } else if (card.location == player.handLocation) {
+        } else if (card.location == player.handLocation && !isEnemyTurn) {
             if (card.type != CardType::Monster) {
                 score += card.passed * 21;
             }
