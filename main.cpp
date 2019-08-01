@@ -117,6 +117,7 @@ struct Card {
 struct Player {
     int hp;
     int mana;
+    int remainingMana;
     int handCount;
     int cardsToDraw;
     int cardsRemaining;
@@ -822,10 +823,14 @@ void Agent::readPlayersInfo() {
         cin >> discoveredCard >> action >> origin >> target;
         cin.ignore();
 
-        if (action == "ATTACK")
-            continue;
+        if (action != "ATTACK") {
+            int pos = 0;
+            while (cardOccurrences[pos].id != discoveredCard) ++pos;
 
-        discoverCard(discoveredCard);
+            state.enemy.remainingMana -= cardOccurrences[pos].card.cost;
+
+            discoverCard(discoveredCard);
+        }
     }
 
     state.enemy.handCount = opponentHand;
@@ -1321,7 +1326,8 @@ void Agent::play() {
 
     int i = 0;
     for (auto &prediction : cardOccurrences) {
-        if (prediction.card.cost < state.enemy.mana + 1) {
+        if (prediction.card.cost < state.enemy.mana + 1
+                && prediction.card.cost > state.enemy.remainingMana) {
             prediction.card.location = state.enemy.handLocation;
             prediction.card.index = state.cards.size();
             cerr << prediction.card.id << " ";
