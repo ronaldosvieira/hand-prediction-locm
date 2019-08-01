@@ -499,92 +499,6 @@ vector<Action> State::legalMoves() {
     //    seed=4882437402899864600
     //    shufflePlayer1Seed=2206163186945330453
 
-    if (false && !legalActions.empty() && !isEnemyTurn) {
-        if (lastAction.type == ActionType::Use) {
-            bool defenderDead =
-                    lastAction.targetIndex != -1 && cards[lastAction.targetIndex].location == CardLocation::Graveyard;
-            bool defenderGuard = lastAction.targetIndex != -1 && cards[lastAction.targetIndex].guard;
-    //      bool guardRemoved = lastAction.targetIndex != -1 && !cards[lastAction.targetIndex].guard &&
-    //      cards[lastAction.index].guard; // TODO
-
-            if (!(defenderGuard && defenderDead)) {
-                if (defenderDead) {
-                    legalActions.erase(remove_if(legalActions.begin(),
-                                                 legalActions.end(),
-                                                 [&](Action action) {
-                                                     return (action.index == lastAction.index) ||
-                                                            (action.targetIndex == lastAction.targetIndex) ||
-                                                            ((action.type == ActionType::Summon ||
-                                                              action.type == ActionType::Use) &&
-                                                             cards[action.index].cost > player.mana);
-                                                 }), legalActions.end());
-                } else {
-                    legalActions.erase(remove_if(legalActions.begin(),
-                                                 legalActions.end(),
-                                                 [&](Action action) {
-                                                     return (action.index == lastAction.index) ||
-                                                            ((action.type == ActionType::Summon ||
-                                                              action.type == ActionType::Use) &&
-                                                             cards[action.index].cost > player.mana);
-                                                 }), legalActions.end());
-                }
-                return legalActions;
-            }
-
-        } else if (lastAction.type == ActionType::Attack) {
-            // TODO ward lose, ward item
-            // TODO dead can summon
-            bool defenderDead =
-                    lastAction.targetIndex != -1 && cards[lastAction.targetIndex].location == CardLocation::Graveyard;
-            bool attackerDead = cards[lastAction.index].location == CardLocation::Graveyard;
-
-            bool defenderGuard = lastAction.targetIndex != -1 && cards[lastAction.targetIndex].guard;
-
-            if (!defenderGuard || !defenderDead) {
-                if (defenderDead && !attackerDead) {
-                    legalActions.erase(remove_if(legalActions.begin(),
-                                                 legalActions.end(),
-                                                 [&](Action action) {
-                                                     return (action.index == lastAction.index) ||
-                                                            (action.targetIndex == lastAction.targetIndex);
-                                                 }), legalActions.end());
-                } else if (defenderDead && attackerDead) {
-                    legalActions.erase(remove_if(legalActions.begin(),
-                                                 legalActions.end(),
-                                                 [&](Action action) {
-                                                     return (action.index == lastAction.index) ||
-                                                            (action.targetIndex == lastAction.targetIndex) ||
-                                                            (action.targetIndex == lastAction.index);
-                                                 }), legalActions.end());
-                } else if (!defenderDead && attackerDead) {
-                    legalActions.erase(remove_if(legalActions.begin(),
-                                                 legalActions.end(),
-                                                 [&](Action action) {
-                                                     return (action.index == lastAction.index) ||
-                                                            (action.targetIndex == lastAction.index);
-                                                 }), legalActions.end());
-                } else if (!defenderDead && !attackerDead) {
-                    legalActions.erase(remove_if(legalActions.begin(),
-                                                 legalActions.end(),
-                                                 [&](Action action) {
-                                                     return (action.index == lastAction.index);
-                                                 }), legalActions.end());
-                }
-
-                return legalActions;
-            } else if (lastAction.type == ActionType::Summon && !cards[lastAction.index].charge) { // TODO item
-                legalActions.erase(remove_if(legalActions.begin(),
-                                             legalActions.end(),
-                                             [&](Action action) {
-                                                 return (action.index == lastAction.index) ||
-                                                        ((action.type == ActionType::Summon ||
-                                                          action.type == ActionType::Use) &&
-                                                         cards[action.index].cost > player.mana);
-                                             }), legalActions.end());
-                return legalActions;
-            }
-        }
-    }
     vector<Action> actions;
 
     for (auto &card1 : cards) {
@@ -1125,7 +1039,7 @@ int Agent::bruteForce(State root, int depth, Action &bestAction, int alpha) {
     }
 
     if (elapsed_time() >= TIME_LIMIT) {
-        return 0;
+        return INT_MIN;
     }
 
     int bestScore = INT_MIN;
