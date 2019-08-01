@@ -1247,7 +1247,7 @@ void Agent::play() {
             cerr << prediction.card.id << " ";
             state.cards.push_back(prediction.card);
 
-            if (++i >= state.enemy.handCount)
+            if (++i >= state.enemy.handCount + state.enemy.cardsToDraw)
                 break;
         }
     }
