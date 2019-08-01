@@ -1323,7 +1323,7 @@ void Agent::play() {
     for (auto &prediction : cardOccurrences) {
         if (prediction.card.cost < state.enemy.mana + 1) {
             prediction.card.location = state.enemy.handLocation;
-            prediction.card.index = i;
+            prediction.card.index = state.cards.size();
             cerr << prediction.card.id << " ";
             state.cards.push_back(prediction.card);
 
