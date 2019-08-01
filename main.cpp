@@ -357,7 +357,7 @@ void State::attack(int index, int targetIndex) {
 void State::summon(int index, int lane) {
     auto &card = cards[index];
     card.location = player.boardLocation;
-    player.mana -= card.cost;
+    player.remainingMana -= card.cost;
     player.cardsToDraw += card.cardDraw;
     player.hp += card.playerHpChange;
     enemy.hp += card.enemyHpChange;
@@ -379,7 +379,7 @@ void State::use(int index, int targetIndex) {
     auto &item = cards[index];
 
     --player.handCount;
-    player.mana -= item.cost;
+    player.remainingMana -= item.cost;
     player.cardsToDraw += item.cardDraw;
     item.location = CardLocation::Graveyard;
 
@@ -528,7 +528,7 @@ vector<Action> State::legalMoves() {
             actions.emplace_back(ActionType::PassCard, card1.index);
 
             // Check for spells and summon
-        } else if (card1.location == player.handLocation && card1.cost <= player.mana) {
+        } else if (card1.location == player.handLocation && card1.cost <= player.remainingMana) {
 
             if (card1.type == CardType::Monster) {
                 if (player.boardLaneCount[0] < MAX_MONSTERS_PER_LANE) {
@@ -607,6 +607,14 @@ void State::swapPlayers() {
     enemy = temp;
 
     lastAction.type = ActionType::Null;
+
+    player.mana++;
+    player.remainingMana = player.mana;
+
+    for (Card &card : cards) {
+        card.canAttack = true;
+        card.attacked = false;
+    }
 
     isEnemyTurn = !isEnemyTurn;
 }
@@ -709,6 +717,7 @@ void Agent::readPlayersInfo() {
 
         player->hp = playerHealth;
         player->mana = playerMana;
+        player->remainingMana = playerMana;
         player->cardsRemaining = playerDeck;
         player->rune = playerRune / 5;
     }
@@ -1188,7 +1197,7 @@ int Agent::enemyRandomSearch(const State &root) {
 
 void Agent::allAttackEnemyPlayer(vector<Action> &actions) {
     for (auto &card : state.cards) {
-        if (card.location != CardLocation::PlayerBoard || card.attacked) {
+        if (card.location != CardLocation::PlayerBoard || !card.canAttack || card.attacked) {
             continue;
         }
         actions.emplace_back(ActionType::Attack, card.index, -1);
@@ -1393,6 +1402,9 @@ void Agent::benchmark() {
 
     state.player.mana = 10;
     state.enemy.mana = 10;
+
+    state.player.remainingMana = 10;
+    state.enemy.remainingMana = 10;
 
     state.player.hp = 30;
     state.enemy.hp = 30;
