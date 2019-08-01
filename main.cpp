@@ -1125,7 +1125,7 @@ int Agent::bruteForce(State root, int depth, Action &bestAction, int alpha) {
     }
 
     if (elapsed_time() >= TIME_LIMIT) {
-        depth = 1;
+        return 0;
     }
 
     int bestScore = INT_MIN;
